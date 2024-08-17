@@ -3,6 +3,8 @@ import pygame
 import numpy as np
 import sys
 import time
+import matplotlib.pyplot as plt
+from io import BytesIO
 
 pygame.init()
 
@@ -30,8 +32,10 @@ intro_textRect = intro_text.get_rect()
 text = ''
 output = ''
 
+ytext = 'y ='
 gtext = ''
 goutput = ''
+graph_image = None
 
 input_text = font.render(text, True, BLACK, WHITE)
 input_rect = input_text.get_rect()
@@ -39,7 +43,11 @@ input_rect.topleft = (0, 20)
 
 graph_input_text = font.render(gtext, True, BLACK, WHITE)
 graph_input_rect = graph_input_text.get_rect()
-graph_input_rect.topleft = (0, 20)
+graph_input_rect.topleft = (30, 20)
+
+yinput_text = font.render(ytext, True, BLACK, WHITE)
+yinput_rect = yinput_text.get_rect()
+yinput_rect.topleft = (0, 20)
 
 cursor = pygame.Rect(input_rect.topright, (3, input_rect.height))
 
@@ -69,6 +77,30 @@ def calculate(expression):
     except:
          return "Error"
 
+def plot_function(expression):
+    try:
+        x = np.linspace(-10, 10, 400)
+        y = eval(expression)
+        plt.figure(figsize=(6, 4))
+        plt.plot(x, y, label=expression)
+        plt.xlim(-10, 10)
+        plt.ylim(-10, 10)
+        plt.axhline(0, color='black', linewidth=0.5)
+        plt.axvline(0, color='black', linewidth=0.5)
+        plt.grid(True)
+        plt.title(f'Graph of {expression}', **font)
+        plt.legend()
+
+        buf = BytesIO()
+        plt.savefig(buf, format='png')
+        plt.close()
+        buf.seek(0)
+
+        return pygame.image.load(buf)
+    except Exception as e:
+        print(f"Error plotting function: {e}")
+        return None
+
 def main_screen():
     screen.fill(WHITE)
     screen.blit(intro_text, intro_textRect)
@@ -85,10 +117,14 @@ def graphing_screen():
     graph_intro_text = font.render('Welcome to the Graphing Window!', True, BLACK, WHITE)
     graph_intro_textRect = graph_intro_text.get_rect()
     pygame.draw.rect(screen, BLACK, mainswitch_rect, 3)
+    screen.blit(yinput_text, yinput_rect)
     screen.blit(graph_intro_text, graph_intro_textRect)
     screen.blit(mainswitch_text, mainswitch_textRect)
     screen.blit(graph_input_text, graph_input_rect)
     screen.blit(graph_output_text, graph_output_rect)
+
+    if graph_image:
+        screen.blit(graph_image, (100, 100))
     if time.time() % 1 > 0.5:
         pygame.draw.rect(screen, BLACK, cursor)
     pygame.display.update()
@@ -136,6 +172,11 @@ while True:
                 if event.key == pygame.K_BACKSPACE:
                     if len(gtext) > 0:
                         gtext = gtext[:-1]
+                elif event.key == pygame.K_RETURN:
+                    try:
+                        graph_image = plot_function(gtext)
+                    except Exception as e:
+                        print(f'Error during graph plotting: {e}')
                 else:
                     gtext += event.unicode
                 
@@ -147,7 +188,7 @@ while True:
         main_screen()
     if state == "graphing":
         graphing_screen()
-        
+
     #keys = pygame.key.get_pressed()    #trying to figure out how to make BACKSPACE keep going if held down
     #if keys[pygame.K_BACKSPACE]:
         #if len(text) > 0:
