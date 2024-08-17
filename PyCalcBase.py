@@ -26,10 +26,25 @@ intro_text = font.render('Welcome to PyCalcGT v1.0! Enter a calculation to conti
 intro_textRect = intro_text.get_rect()
 
 text = ''
+output = ''
+
 input_text = font.render(text, True, BLACK, WHITE)
 input_rect = input_text.get_rect()
 input_rect.topleft = (0, 20)
+
 cursor = pygame.Rect(input_rect.topright, (3, input_rect.height))
+
+output_text = font.render(output, True, BLACK, WHITE)
+output_rect = output_text.get_rect()
+output_rect.topright = (750, 40)
+
+def calculate(expression):
+    try:
+         output = eval(expression)
+         return str(output)
+    except:
+         return "Error"
+    
 
 while True:
     clock.tick(60)
@@ -47,7 +62,13 @@ while True:
                 pygame.quit()
                 exit()
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_BACKSPACE:
+            if event.key == pygame.K_RETURN:
+                 output = calculate(text)
+                 output_text = font.render(output, True, BLACK, WHITE)
+                 output_rect.size = output_text.get_size()
+                 output_rect.topright = (750, 40)
+
+            elif event.key == pygame.K_BACKSPACE:
                 if len(text) > 0:
                     text = text[:-1]
             else:
@@ -57,14 +78,16 @@ while True:
             input_rect.size = input_text.get_size()
             cursor.topleft = input_rect.topright
         
-    #keys = pygame.key.get_pressed()    trying to figure out how to make BACKSPACE keep going if held down
+    #keys = pygame.key.get_pressed()    #trying to figure out how to make BACKSPACE keep going if held down
     #if keys[pygame.K_BACKSPACE]:
         #if len(text) > 0:
             #text = text[:-1]
-            
-    screen.blit(input_text, input_rect)
 
     if time.time() % 1 > 0.5:
                 pygame.draw.rect(screen, BLACK, cursor) 
+    
+    screen.blit(input_text, input_rect)
+    screen.blit(output_text, output_rect)
+
 
     pygame.display.update()
